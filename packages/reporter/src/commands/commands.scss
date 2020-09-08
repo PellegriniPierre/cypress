@@ -274,12 +274,7 @@
       display: block;
       float: right;
       height: 100%;
-
-      @keyframes progress-bar {
-        100% {
-          width: 0;
-        }
-      }
+      width: 100%;
     }
   }
 

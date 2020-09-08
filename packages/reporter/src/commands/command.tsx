@@ -117,14 +117,36 @@ interface ProgressProps {
 }
 
 const Progress = observer(({ model }: ProgressProps) => {
-  const timeElapsed = Date.now() - new Date(model.wallClockStartedAt).getTime()
-  const timeRemaining = model.timeout ? model.timeout - timeElapsed : 0
-  const percentageRemaining = timeRemaining / model.timeout * 100 || 0
+  const wallClockStartedAt = new Date(model.wallClockStartedAt).getTime()
+  const ref: React.Ref<HTMLSpanElement> = React.createRef()
 
-  // we add a key to the span to ensure a rerender and restart of the animation on change
+  const scheduleAnimationUpdate = () => {
+    requestAnimationFrame(function updateProgressBar () {
+      if (!ref.current) {
+        return
+      }
+
+      const timeElapsed = Date.now() - wallClockStartedAt
+      const timeRemaining = model.timeout ? model.timeout - timeElapsed : 0
+
+      if (!timeRemaining || timeRemaining < 0) {
+        return ref.current.style.setProperty('background', '#7eb0db')
+      }
+
+      const pRemaining = timeRemaining / model.timeout * 100 || 0
+      const pElapsed = 100 - pRemaining
+
+      ref.current.style.setProperty('background', `linear-gradient(90deg, transparent 0 ${pElapsed}%, #7eb0db ${pElapsed}% ${pRemaining}%)`)
+
+      scheduleAnimationUpdate()
+    })
+  }
+
+  scheduleAnimationUpdate()
+
   return (
     <div className='command-progress'>
-      <span style={{ animationDuration: `${timeRemaining}ms`, width: `${percentageRemaining}%` }} key={timeRemaining} />
+      <span ref={ref} />
     </div>
   )
 })
